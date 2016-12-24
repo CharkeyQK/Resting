@@ -33,6 +33,7 @@ import com.google.resting.method.put.PutHelper;
 import com.google.resting.rest.client.HttpContext;
 import com.google.resting.transform.TransformationType;
 import org.apache.http.Header;
+import org.apache.http.entity.mime.content.ContentBody;
 
 import java.io.File;
 import java.util.List;
@@ -405,7 +406,7 @@ public final class Resting {
      * @param proxyHost         Host of the proxy server
      * @param proxyPort         Port of the proxy server
      * @param proxyUser         Proxy username. Default is null.
-     * @param proxyPassword.    Proxy password. Default is null.
+     * @param proxyPassword    Proxy password. Default is null.
      * @return
      */
 
@@ -429,6 +430,10 @@ public final class Resting {
      */
     public final static ServiceResponse post(String baseURI, int port, RequestParams requestParams, File file, EncodingTypes fileEncoding, List<Header> additionalHeaders, ContentType fileContentType, HttpContext httpContext) {
         return PostHelper.post(baseURI, port, file, requestParams, fileEncoding, additionalHeaders, fileContentType, httpContext);
+    }//post
+
+    public static ServiceResponse post(String baseURI, int port, RequestParams requestParams, Map<String, ContentBody> multipartBody, List<Header> additionalHeaders, ContentType fileContentType, HttpContext httpContext) {
+        return PostHelper.post(baseURI, port, multipartBody, requestParams, additionalHeaders, fileContentType, httpContext);
     }//post
 
     /**

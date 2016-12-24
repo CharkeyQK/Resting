@@ -24,9 +24,11 @@ import com.google.resting.component.impl.URLContext;
 import com.google.resting.rest.client.HttpContext;
 import com.google.resting.serviceaccessor.impl.ServiceAccessor;
 import org.apache.http.Header;
+import org.apache.http.entity.mime.content.ContentBody;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Helper class for HTTP PUT operation
@@ -59,4 +61,10 @@ public class PostHelper {
         ServiceContext serviceContext = new PostServiceContext(urlContext, requestParams, file, encoding, additionalHeaders, contentType, httpContext);
         return ServiceAccessor.access(serviceContext);
     }//post
+
+    public static ServiceResponse post(String url, int port, Map<String, ContentBody> multipartBody, RequestParams requestParams, List<Header> additionalHeaders, ContentType fileContentType, HttpContext httpContext) {
+        URLContext urlContext = new URLContext(url, port);
+        ServiceContext serviceContext = new PostServiceContext(urlContext, requestParams, multipartBody, additionalHeaders, fileContentType, httpContext);
+        return ServiceAccessor.access(serviceContext);
+    }
 }//PostHelper

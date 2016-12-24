@@ -29,10 +29,14 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.ContentBody;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Implementation of ServiceContext for HTTP POST operation.
@@ -89,6 +93,14 @@ public class PostServiceContext extends ServiceContext {
         //	System.out.println( "The path is "+path);
     }//PostServiceContext
 
+    public PostServiceContext(URLContext urlContext, RequestParams requestParams, Map<String, ContentBody> multipartBody, List<Header> inputHeaders, ContentType contentType, HttpContext httpContext) {
+        super(urlContext, requestParams, Verb.POST, EncodingTypes.UTF8, inputHeaders, httpContext);
+        this.contextPathElement = urlContext.getContextPath();
+        this.path = this.contextPathElement;
+        this.httpEntity = setMultipartEntity(multipartBody, contentType);
+        //	System.out.println( "The path is "+path);
+    }//PostServiceContext
+
     private HttpEntity setMessageEntity(String message, EncodingTypes encoding, ContentType contentType) {
         StringEntity entity = null;
         try {
@@ -121,6 +133,16 @@ public class PostServiceContext extends ServiceContext {
         }
         return entity;
     }//setFileEntity
+
+    private HttpEntity setMultipartEntity(Map<String, ContentBody> multipartBody, ContentType fileContentType) {
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+
+        for (Map.Entry<String, ContentBody> entry : multipartBody.entrySet()) {
+            builder.addPart(entry.getKey(), entry.getValue());
+        }
+        return builder.build();
+    }//setMultipartEntity
 
     private HttpEntity setFormEntity(List<NameValuePair> inputParams) {
         UrlEncodedFormEntity entity = null;

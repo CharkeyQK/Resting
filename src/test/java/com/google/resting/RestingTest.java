@@ -15,6 +15,7 @@
  */
 package com.google.resting;
 
+import com.google.gson.JsonObject;
 import com.google.resting.atom.AtomFeed;
 import com.google.resting.component.Alias;
 import com.google.resting.component.EncodingTypes;
@@ -26,6 +27,9 @@ import com.google.resting.component.impl.ServiceResponse;
 import com.google.resting.component.impl.json.JSONAlias;
 import com.google.resting.component.impl.json.JSONRequestParams;
 import com.google.resting.component.impl.xml.XMLAlias;
+import com.google.resting.json.JSONException;
+import com.google.resting.json.JSONObject;
+import com.google.resting.rest.client.HttpContext;
 import com.google.resting.transform.impl.JSONTransformer;
 import com.google.resting.transform.impl.XMLTransformer;
 import com.google.resting.util.ReflectionUtil;
@@ -33,13 +37,18 @@ import com.google.resting.vo.*;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
 import org.apache.http.Header;
+import org.apache.http.entity.mime.content.ContentBody;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.message.BasicHeader;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -51,11 +60,14 @@ import static org.junit.Assert.*;
  */
 public class RestingTest {
 
+    private static final String API_BASE_URL = "http://localhost/all/";
+    private static final int API_BASE_PORT = 9800;
+
     @Test
     public void testGet() {
         System.out.println("\ntestGet\n-----------------------------");
         try {
-            ServiceResponse response = Resting.get("http://where.yahooapis.com/geocode?q=1600+Pennsylvania+Avenue,+Washington,+DC&appid=YD-9G7bey8_JXxQP6rxl.fBFGgCdNjoDMACQA--", 80);
+            ServiceResponse response = Resting.get(API_BASE_URL+ "/account", API_BASE_PORT);
             System.out.println("[RestingTest::testGet] Response is" + response);
             assertEquals(200, response.getStatusCode());
         } catch (Exception e) {
@@ -89,6 +101,29 @@ public class RestingTest {
             assertEquals(7515478, products.get(0).getProductId());
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testParseWithAlias() throws JSONException {
+        String jsonString = "{\n" +
+                "    \"product\": [\n" +
+                "        {\n" +
+                "            \"brandId\": \"632\",\n" +
+                "            \"brandName\": \"Sam Edelman\",\n" +
+                "            \"defaultImageUrl\": \"http://www.zappos.com/images/z/1/7/8/8/2/2/1788226-p-DETAILED.jpg\",\n" +
+                "            \"defaultProductUrl\": \"http://www.zappos.com/product/7515478\",\n" +
+                "            \"productId\": \"7515478\",\n" +
+                "            \"productName\": \"Gigi\"\n" +
+                "        }\n" +
+                "    ],\n" +
+                "    \"statusCode\": \"200\"\n" +
+                "}";
+        Alias productAlias = new JSONAlias("product");
+        String  singleAlias = ((JSONAlias) productAlias).getSingleAlias();
+        JSONObject responseObject = new JSONObject(jsonString);
+        if (responseObject.has(singleAlias)) {
+            Object aliasedObject = responseObject.get(singleAlias);
         }
     }
 
@@ -449,6 +484,22 @@ public class RestingTest {
         ServiceResponse response = Resting.postAsJSON("http://localhost/testresting/rest/hello/post/jsonobject", 8080, null, house, null, null);
         System.out.println(response);
 
+    }
+
+    @Test
+    public void testUploadImg() throws IOException {
+        Map<String, ContentBody> multipartBody = new HashMap<>();
+        multipartBody.put("Message 1", new StringBody("The content of Message 1", org.apache.http.entity.ContentType.MULTIPART_FORM_DATA));
+        multipartBody.put("Message 2", new StringBody("The content of Message 2", org.apache.http.entity.ContentType.MULTIPART_FORM_DATA));
+        File fileToUpload = new File("C:\\Users\\Charkey\\Desktop\\1.jpg");
+        FileBody fileBodyToUpload = new FileBody(fileToUpload);
+        multipartBody.put("file", fileBodyToUpload);
+
+        HttpContext httpContext = new HttpContext();
+        //httpContext.setProxy("localhost", 8888);
+        ServiceResponse response = Resting.post("http://localhost/all/fileUpload/file?ownerId=111&groupId=111",
+                9800, null, multipartBody, null, ContentType.IMAGE_JPEG, httpContext);
+        System.out.println(response);
     }
 
 }
